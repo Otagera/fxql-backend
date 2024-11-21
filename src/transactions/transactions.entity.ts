@@ -5,13 +5,14 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  Index,
 } from 'typeorm';
-import { Currency } from './transactions.interface';
 
 @Entity()
+@Index(['sourceCurrency', 'destinationCurrency'], { unique: true })
 export class Transaction {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @Column({
     length: 3,

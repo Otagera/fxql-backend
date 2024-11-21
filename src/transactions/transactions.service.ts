@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transaction } from './transactions.entity';
 import { CreateFXQLDto } from './createFXQL.dto';
-import { Currency, IFXQL } from './transactions.interface';
+import { IFXQL, ITxn } from './transactions.interface';
 
 export type AliaserSpec<T> = {
   [key: string]: keyof T;
@@ -31,31 +31,62 @@ export class TransactionService {
   getHello(): string {
     return 'Hello World!';
   }
-  async createFXQL(data: CreateFXQLDto): Promise<object> {
+  async createFXQL(data: CreateFXQLDto): Promise<ITxn[]> {
     const regex =
       /^([A-Z]{3,3})-([A-Z]{3,3})\s{\s*\n\s*BUY\s+(\d*\.?\d+)\s*\n\s*SELL\s+(\d*\.?\d+)\s*\n\s*CAP\s+(\d+)\s*\n\s*}\s*\n*\s*/gm;
     const cleaned = data.FXQL.replace(/\\n/g, '\n');
 
-    const matches: IFXQL[] = [];
     let match: RegExpExecArray;
+    let count = 0;
+    if (cleaned.match(regex).length > 1000) {
+      throw new HttpException(
+        'You have exceeded the maximum 1000 currency pairss per request',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
 
-    while ((match = regex.exec(cleaned)) !== null) {
-      if (match.length < 6) {
-        console.log('match', match);
-      }
-      matches.push({
-        sourceCurrency: match[1] as Currency,
-        destinationCurrency: match[2] as Currency,
+    const pairs = new Map<string, IFXQL>();
+    while ((match = regex.exec(cleaned)) !== null && count++ < 1000) {
+      const sourceCurrency = match[1] as string;
+      const destinationCurrency = match[2] as string;
+      pairs.set(`${sourceCurrency}-${destinationCurrency}`, {
+        sourceCurrency,
+        destinationCurrency,
         buyPrice: parseFloat(match[3]),
         sellPrice: parseFloat(match[4]),
         capAmount: parseInt(match[5], 10),
       });
     }
 
-    const txs = matches.map((_match) => {
-      const tx = this.repo.create(_match);
-      return this.repo.save(tx);
+    const finds: Promise<Transaction>[] = [];
+    const txs: Promise<Transaction>[] = [];
+    pairs.forEach((value) => {
+      const _match = value;
+      finds.push(
+        this.repo.findOne({
+          where: {
+            sourceCurrency: _match.sourceCurrency,
+            destinationCurrency: _match.destinationCurrency,
+          },
+        }),
+      );
     });
+
+    const resolvedFinds = await Promise.all(finds);
+    let index = 0;
+    for (const [key, _match] of pairs) {
+      let _find = resolvedFinds[index++];
+
+      if (_find) {
+        _find.buyPrice = _match.buyPrice;
+        _find.sellPrice = _match.sellPrice;
+        _find.capAmount = _match.capAmount;
+      } else {
+        _find = this.repo.create(_match);
+      }
+
+      txs.push(this.repo.save(_find));
+    }
 
     return (await Promise.all(txs)).map((tx) =>
       aliaser(tx, {
