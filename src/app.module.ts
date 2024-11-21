@@ -6,9 +6,11 @@ import { Transaction } from './transactions/transactions.entity';
 import { TransactionModule } from './transactions/transactions.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-
+import { ConfigModule } from '@nestjs/config';
+console.log('process.env', process.env);
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         name: 'short',
@@ -32,7 +34,7 @@ import { APP_GUARD } from '@nestjs/core';
       port: 5432,
       username: process.env.PG_USERNAME,
       password: process.env.PG_PASSWORD,
-      database: 'mira_fxql',
+      database: process.env.PG_DATABASE,
       entities: [Transaction],
       synchronize: true,
     }),

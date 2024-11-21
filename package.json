@@ -23,6 +23,7 @@
     "@anatine/zod-nestjs": "^2.0.9",
     "@anatine/zod-openapi": "^2.2.6",
     "@nestjs/common": "^9.0.0",
+    "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/swagger": "^8.0.7",
