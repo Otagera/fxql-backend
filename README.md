@@ -2,11 +2,11 @@
 
 ## Description
 
-An application made with [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+An application made with [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository. The URL for the application [link](https://fxql-backend-w8pi.onrender.com)
 
 ## Documentation
 
-The documentation for this project is auth generated using swagger to be accessed at ```{url}/api```
+The documentation for this project is auth generated using swagger to be accessed at [docs](https://fxql-backend-w8pi.onrender.com/api)
 
 
 ## Installation

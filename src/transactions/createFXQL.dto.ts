@@ -3,7 +3,6 @@ import { extendApi } from '@anatine/zod-openapi';
 import { z } from 'zod';
 export const createFXQLSchema = z
   .object({
-    // FXQL: z.string(),
     FXQL: z
       .string()
       .regex(

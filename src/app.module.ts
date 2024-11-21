@@ -7,7 +7,7 @@ import { TransactionModule } from './transactions/transactions.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-console.log('process.env', process.env);
+
 @Module({
   imports: [
     ConfigModule.forRoot(),
